@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Trello D3</title>
+    <style>
+        .links line {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+
+        .nodes circle {
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div v-if="cards.length === 0">
+        <div v-if="isAuthenticated">
+            <div v-for="board in boards">
+                {{board.name}}
+                <button type="button" v-on:click="buildGraph(board)">build graph</button>
+            </div>
+        </div>
+        <div v-else>
+            <button v-on:click="authenticate">login</button>
+        </div>
+    </div>
+    <svg width="960" height="960"></svg>
+</div>
+<script src="https://unpkg.com/vue"></script>
+<script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="https://api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="buildGraph.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                isAuthenticated: Trello.authorized(),
+                boards: [],
+                cards: []
+            }
+        },
+        methods: {
+            authenticate() {
+                Trello.authorize({
+                    type: 'popup',
+                    name: 'Trello D3',
+                    scope: {
+                        read: 'true',
+                        write: 'true'
+                    },
+                    expiration: 'never',
+                    success: this.authenticationSuccess,
+                    error: this.authenticationFailure
+                });
+            },
+            authenticationFailure() {
+                alert("auth error")
+            },
+            authenticationSuccess() {
+                this.isAuthenticated = true;
+                this.loadBoards()
+            },
+            loadBoards() {
+                Trello.get('/members/me/boards').then(boards => {
+                    this.boards = boards;
+                })
+            },
+            buildGraph(board){
+                Trello.get(`/boards/${board.id}/cards`)
+                    .then(cards => {
+                        this.cards = cards;
+                        buildD3Graph(cards);
+                    });
+            }
+        }
+    });
+</script>
+</body>
+</html>
