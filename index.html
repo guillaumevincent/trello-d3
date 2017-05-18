@@ -7,14 +7,36 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Trello D3</title>
     <style>
-        .links line {
-            stroke: #999;
-            stroke-opacity: 0.6;
+        body {
+            margin: 0;
+            padding: 0;
         }
 
-        .nodes circle {
-            stroke: #fff;
+        .link {
+            fill: none;
+            stroke: #666;
             stroke-width: 1.5px;
+        }
+
+        circle {
+            fill: #ccc;
+            stroke: #333;
+            stroke-width: 1.5px;
+        }
+
+        text {
+            font: 10px sans-serif;
+            pointer-events: none;
+            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+        }
+
+        .svg {
+            margin-left: 10px;
+            margin-top: 50px;
+        }
+
+        .svg--bordered {
+            border: 1px solid #454545;
         }
     </style>
 </head>
@@ -31,12 +53,12 @@
             <button v-on:click="authenticate">login</button>
         </div>
     </div>
-    <svg width="960" height="960"></svg>
+    <svg></svg>
 </div>
 <script src="https://unpkg.com/vue"></script>
 <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="https://api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
 <script src="buildGraph.js"></script>
 <script>
     var app = new Vue({

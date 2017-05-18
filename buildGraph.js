@@ -1,5 +1,13 @@
 function buildD3Graph(cards) {
-    function getLink(string) {
+    var sourcesIds = {};
+    cards.forEach(card => {
+        var source = {id: card.id, name: card.name};
+        sourcesIds[window.btoa(card.url)] = source;
+        sourcesIds[window.btoa(card.shortUrl)] = source;
+        sourcesIds[card.id] = source;
+        sourcesIds[card.shortLink] = source;
+    });
+    function getLinks(string) {
         var matches = [];
         var parentRegex = /^.*Link\s*:\s*(\S+)/mgi;
         var match = parentRegex.exec(string);
@@ -10,163 +18,78 @@ function buildD3Graph(cards) {
         return matches;
     }
 
-    function getColor(card) {
-        var labels = card.labels || [];
-        if (labels.length > 0) {
-            var isBlocked = false;
-            labels.forEach(label => {
-                if (['block', 'blocked'].indexOf(label.name.toLowerCase()) !== -1) {
-                    isBlocked = true;
-                }
-            });
-            return isBlocked ? 'red' : labels[0].color;
-        }
-        return '#c6dbef'
-    }
-
-    function getName(card) {
-        var labels = card.labels || [];
-        if (labels.length > 0) {
-            var isBlocked = false;
-            labels.forEach(label => {
-                if (['block', 'blocked'].indexOf(label.name.toLowerCase()) !== -1) {
-                    isBlocked = true;
-                }
-            });
-            return isBlocked ? '' : labels[0].name;
-        }
-        return '';
-    }
-
-    var dataSourcesIds = {};
-    cards.forEach(card => {
-        dataSourcesIds[window.btoa(card.url)] = card.id;
-        dataSourcesIds[window.btoa(card.shortUrl)] = card.id;
-        dataSourcesIds[card.id] = card.id;
-        dataSourcesIds[card.shortLink] = card.id;
-    });
-
-    var nodes = [];
     var links = [];
     cards.forEach(card => {
-        var n = {id: card.id, url: card.url, children: true, radius: 5, name: card.name};
-        var ls = getLink(card.desc);
+        var ls = getLinks(card.desc);
         ls.forEach(l => {
-            links.push({source: dataSourcesIds[window.btoa(l)], target: card.id, value: 1})
+            var source = sourcesIds[window.btoa(l)];
+            if (typeof source !== 'undefined') {
+                links.push({source: source.id, target: card.id, sourceName: source.name, targetName: card.name})
+            }
         });
-        if (ls.length === 0) {
-            n.radius = 10;
-            n.name = getName(card);
-        }
-        n.color = getColor(card);
-        nodes.push(n);
+    });
+    var nodes = {};
+
+    // Compute the distinct nodes from the links.
+    links.forEach(function(link) {
+        link.source = nodes[link.source] || (nodes[link.source] = {name: link.sourceName});
+        link.target = nodes[link.target] || (nodes[link.target] = {name: link.targetName});
     });
 
-    d3.selectAll("svg > *").remove();
+    var margin = {top: 50, right: 10, bottom: 10, left: 10};
+    var width = window.innerWidth - margin.left - margin.right;
+    var height = window.innerHeight - margin.top - margin.bottom;
 
-    var svg = d3.select("svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+    var force = d3.layout.force()
+        .nodes(d3.values(nodes))
+        .links(links)
+        .size([width, height])
+        .linkDistance(120)
+        .charge(-500)
+        .on("tick", tick)
+        .start();
 
-    var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(function(d) {
-            return d.id;
-        }).distance(100))
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(width / 2, height / 2));
+    var svg = d3.select("svg")
+        .attr("class", "svg svg--bordered")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("transform", "translate(50,0)");
 
-    var link = svg.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(links)
-        .enter().append("line")
-        .attr("stroke-width", function(d) {
-            return Math.sqrt(d.value);
-        });
-
-    var node = svg.selectAll(".node")
-        .data(nodes)
-        .enter().append("g")
-        .attr("class", "node")
-        .on("dblclick", function(d) {
-            window.open(d.url, '_blank');
-        })
-        .call(d3.drag().on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
-
-    var circle = node.append("circle")
-        .attr("r", function(d) {
-            return d.radius;
-        })
-        .attr("fill", function(d) {
-            return d.color;
-        });
-
-    circle.append("title")
-        .text(function(d) {
-            return `${d.name}`;
-        });
+    var path = svg.append("g").selectAll("path")
+        .data(force.links())
+        .enter().append("path")
+        .attr("class", "link");
 
 
-    var text = node.append("text")
+    var circle = svg.append("g").selectAll("circle")
+        .data(force.nodes())
+        .enter().append("circle")
+        .attr("r", 6)
+        .call(force.drag);
+
+    var text = svg.append("g").selectAll("text")
+        .data(force.nodes())
+        .enter().append("text")
+        .attr("x", 8)
+        .attr("y", ".31em")
         .text(function(d) {
             return d.name;
         });
 
-    simulation
-        .nodes(nodes)
-        .on("tick", ticked);
-
-    simulation.force("link")
-        .links(links);
-
-    function ticked() {
-        link
-            .attr("x1", function(d) {
-                return d.source.x;
-            })
-            .attr("y1", function(d) {
-                return d.source.y;
-            })
-            .attr("x2", function(d) {
-                return d.target.x;
-            })
-            .attr("y2", function(d) {
-                return d.target.y;
-            });
-
-        circle
-            .attr("cx", function(d) {
-                return d.x;
-            })
-            .attr("cy", function(d) {
-                return d.y;
-            });
-
-        text
-            .attr("dx", function(d) {
-                return d.x + 15;
-            })
-            .attr("dy", function(d) {
-                return d.y + 4;
-            });
+    function tick() {
+        path.attr("d", linkArc);
+        circle.attr("transform", transform);
+        text.attr("transform", transform);
     }
 
-    function dragstarted(d) {
-        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
+    function linkArc(d) {
+        var dx = d.target.x - d.source.x,
+            dy = d.target.y - d.source.y,
+            dr = Math.sqrt(dx * dx + dy * dy);
+        return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
     }
 
-    function dragged(d) {
-        d.fx = d3.event.x;
-        d.fy = d3.event.y;
-    }
-
-    function dragended(d) {
-        if (!d3.event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+    function transform(d) {
+        return "translate(" + d.x + "," + d.y + ")";
     }
 }
