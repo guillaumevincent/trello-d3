@@ -1,0 +1,26 @@
+{
+  "name": "trello-d3",
+  "version": "0.1.0",
+  "description": "See the relationship between cards in your Trello boards",
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guillaumevincent/trello-d3.git"
+  },
+  "keywords": [
+    "trello",
+    "d3",
+    "graph"
+  ],
+  "author": "Guillaume Vincent <gvincent@redhat.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/guillaumevincent/trello-d3/issues"
+  },
+  "homepage": "https://github.com/guillaumevincent/trello-d3#readme",
+  "devDependencies": {
+    "ava": "^0.19.1"
+  }
+}
