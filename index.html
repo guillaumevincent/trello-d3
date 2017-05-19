@@ -12,24 +12,6 @@
             padding: 0;
         }
 
-        .link {
-            fill: none;
-            stroke: #666;
-            stroke-width: 1.5px;
-        }
-
-        circle {
-            fill: #ccc;
-            stroke: #333;
-            stroke-width: 1.5px;
-        }
-
-        text {
-            font: 10px sans-serif;
-            pointer-events: none;
-            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-        }
-
         .svg {
             margin-left: 10px;
             margin-top: 50px;
@@ -37,6 +19,29 @@
 
         .svg--bordered {
             border: 1px solid #454545;
+        }
+
+        .node circle {
+            fill: #999;
+        }
+
+        .node text {
+            font: 10px sans-serif;
+        }
+
+        .node--internal circle {
+            fill: #555;
+        }
+
+        .node--internal text {
+            text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+        }
+
+        .link {
+            fill: none;
+            stroke: #555;
+            stroke-opacity: 0.4;
+            stroke-width: 1.5px;
         }
     </style>
 </head>
@@ -55,11 +60,12 @@
     </div>
     <svg></svg>
 </div>
-<script src="https://unpkg.com/vue"></script>
-<script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
-<script src="https://api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
-<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//unpkg.com/vue"></script>
+<script src="//code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="//api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
+<script src="//d3js.org/d3.v4.min.js"></script>
 <script src="buildGraph.js"></script>
+<script src="trello.js"></script>
 <script>
     var app = new Vue({
         el: '#app',
@@ -97,10 +103,18 @@
                 })
             },
             buildGraph(board){
-                Trello.get(`/boards/${board.id}/cards`)
-                    .then(cards => {
-                        this.cards = cards;
-                        buildD3Graph(cards);
+                Trello.get(`/boards/${board.id}/lists`)
+                    .then(lists => {
+                        const epicList = tdv.extractEpicList(lists);
+                        return Promise
+                            .all([
+                                Trello.get(`/lists/${epicList.id}/cards`),
+                                Trello.get(`/boards/${board.id}/cards`)
+                            ])
+                            .then(values => {
+                                var links = tdv.buildDependencyTree(board.name, values[0], values[1]);
+                                buildD3Graph(links);
+                            })
                     });
             }
         }
