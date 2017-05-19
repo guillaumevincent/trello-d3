@@ -71,23 +71,26 @@ test('extractLinkFromCard', t => {
 
 test('buildDependencyTree', t => {
     var boardName = 'DCI';
-    var epics = [{
-        name: 'E1',
+    let e1 = {
+        name: 'e1',
         desc: '',
         url: 'https://example.org/e1',
         shortUrl: 'https://example.org/e1',
         id: 'e1',
         shortLink: 'e1'
-    }];
+    };
+    let e2 = {
+        name: 'e2',
+        desc: 'Link: https://example.org/e1',
+        url: 'https://example.org/e2',
+        shortUrl: 'https://example.org/e2',
+        id: 'e2',
+        shortLink: 'e2'
+    };
+    var epics = [e1, e2];
     var cards = [
-        {
-            name: 'E1',
-            desc: '',
-            url: 'https://example.org/e1',
-            shortUrl: 'https://example.org/e1',
-            id: 'e1',
-            shortLink: 'e1'
-        },
+        e1,
+        e2,
         {
             name: 'c1',
             desc: 'Link: https://example.org/e1',
@@ -98,7 +101,7 @@ test('buildDependencyTree', t => {
         },
         {
             name: 'c2',
-            desc: 'Link: https://example.org/e2',
+            desc: 'Link: https://example.org/c1',
             url: 'https://example.org/c2',
             shortUrl: 'https://example.org/c2',
             id: 'c2',
@@ -106,9 +109,11 @@ test('buildDependencyTree', t => {
         }
     ];
     var expectedTree = [
-        {source: 'DCI', target:''},
-        {source: 'E1', target:'DCI'},
-        {source: 'c1', target:'E1'}
+        {source: 'DCI', target: ''},
+        {source: 'e1', target: 'DCI'},
+        {source: 'e2', target: 'e1'},
+        {source: 'c1', target: 'e1'},
+        {source: 'c2', target: 'c1'}
     ];
 
     t.deepEqual(trello.buildDependencyTree(boardName, epics, cards), expectedTree);

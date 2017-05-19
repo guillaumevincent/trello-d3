@@ -7,8 +7,11 @@
         ];
         var epicIdsShortcuts = {};
         epics.forEach(epic => {
-            epicIdsShortcuts[epic.id] = epic;
-            links.push({source: epic.name, target: boardName});
+            var link = tdv.extractLinkFromCard(epic);
+            if (typeof link === 'undefined') {
+                epicIdsShortcuts[epic.id] = epic;
+                links.push({source: epic.name, target: boardName});
+            }
         });
 
 
