@@ -7,20 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Trello D3</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        .svg {
-            margin-left: 10px;
-            margin-top: 50px;
-        }
-
-        .svg--bordered {
-            border: 1px solid #454545;
-        }
-
         .node circle {
             fill: #999;
         }
@@ -43,19 +29,32 @@
             stroke-opacity: 0.4;
             stroke-width: 1.5px;
         }
+
+        [v-cloak] {
+            display: none;
+        }
     </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+          integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 </head>
 <body>
-<div id="app">
-    <div v-if="cards.length === 0">
-        <div v-if="isAuthenticated">
-            <div v-for="board in boards">
-                {{board.name}}
-                <button type="button" v-on:click="buildGraph(board)">build graph</button>
+
+<div id="app" v-cloak>
+    <div class="container-fluid">
+        <div class="row mt-1" v-if="isAuthenticated && cards.length === 0 && !hideBoards">
+            <div class="col">
+                <label>Click on the board to build its chart:</label>
+                <button type="button" class="btn btn-outline-primary mr-2 pull-right"
+                        v-for="board in boards"
+                        v-on:click="buildGraph(board)">
+                    {{board.name}}
+                </button>
             </div>
         </div>
-        <div v-else>
-            <button v-on:click="authenticate">login</button>
+        <div class="row" v-if="!isAuthenticated">
+            <div class="col mt-1">
+                <button class="btn btn-success" v-on:click="authenticate">login</button>
+            </div>
         </div>
     </div>
     <svg></svg>
@@ -73,7 +72,8 @@
             return {
                 isAuthenticated: Trello.authorized(),
                 boards: [],
-                cards: []
+                cards: [],
+                hideBoards: false
             }
         },
         methods: {
@@ -103,6 +103,7 @@
                 })
             },
             buildGraph(board){
+                this.hideBoards = true;
                 Trello.get(`/boards/${board.id}/lists`)
                     .then(lists => {
                         const epicList = tdv.extractEpicList(lists);

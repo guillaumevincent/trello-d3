@@ -1,7 +1,6 @@
 function buildD3Graph(links) {
-    var margin = {top: 50, right: 20, bottom: 20, left: 20};
-    var width = window.innerWidth - margin.left - margin.right;
-    var height = window.innerHeight - margin.top - margin.bottom;
+    var width = 1400,
+        height = 1000;
 
     var stratify = d3.stratify()
         .id(function(d) {
@@ -12,16 +11,20 @@ function buildD3Graph(links) {
         })(links);
 
     const svg = d3.select("svg")
-        .attr("class", "svg svg--bordered")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append('g')
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
         .attr("transform", "translate(100,0)");
 
     const root = d3.hierarchy(stratify);
-    const tree = d3.tree().size([width / 2 - margin.left * 2, height / 2 - margin.top * 2]);
+    const tree = d3.tree().size([height - 100, width - 500]);
 
     tree(root);
+
+    // Normalize for fixed-depth.
+    root.descendants().forEach(function(d) {
+        d.y = d.depth * 250
+    });
 
     var link = svg.selectAll(".link")
         .data(root.descendants().slice(1))
@@ -50,7 +53,10 @@ function buildD3Graph(links) {
     node.append("text")
         .attr("dy", 3)
         .attr("x", function(d) {
-            return d.children ? -8 : 8;
+            return d.children ? 0 : 8;
+        })
+        .attr("y", function(d) {
+            return d.children ? -8 : 0;
         })
         .style("text-anchor", function(d) {
             return d.children ? "end" : "start";
