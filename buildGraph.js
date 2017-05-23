@@ -61,6 +61,12 @@ function buildD3Graph(links) {
         .style("text-anchor", function(d) {
             return d.children ? "end" : "start";
         })
+        .on("dblclick", function(d) {
+            var url = d.data.data.url;
+            if (typeof url !== 'undefined') {
+                window.open(url, '_blank');
+            }
+        })
         .text(function(d) {
             return d.data.id
         });

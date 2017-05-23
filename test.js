@@ -111,10 +111,10 @@ test('buildDependencyTree', t => {
     ];
     var expectedTree = [
         {source: 'DCI', target: ''},
-        {source: 'e1', target: 'DCI'},
-        {source: 'e2', target: 'e1'},
-        {source: 'c1', target: 'e1'},
-        {source: 'c2', target: 'c1'}
+        {source: 'e1', target: 'DCI', url: "https://example.org/e1"},
+        {source: 'e2', target: 'e1', url: "https://example.org/e2"},
+        {source: 'c1', target: 'e1', url: "https://example.org/c1"},
+        {source: 'c2', target: 'c1', url: "https://example.org/c2"}
     ];
 
     t.deepEqual(trello.buildDependencyTree(boardName, epics, cards), expectedTree);

@@ -10,7 +10,7 @@
             var link = tdv.extractLinkFromCard(epic);
             if (typeof link === 'undefined') {
                 epicIdsShortcuts[epic.id] = epic;
-                links.push({source: epic.name, target: boardName});
+                links.push({source: epic.name, target: boardName, url: epic.url});
             }
         });
 
@@ -29,7 +29,7 @@
                 if (typeof link !== 'undefined') {
                     var target = cardsIdsShortcuts[link];
                     if (typeof target !== 'undefined') {
-                        links.push({target: target.name, source: card.name})
+                        links.push({target: target.name, source: card.name, url: card.url})
                     }
                 }
             }
@@ -46,9 +46,9 @@
         }
     };
 
-    function getShortUrl(url){
+    function getShortUrl(url) {
         var newUrl = url;
-        while (newUrl.split('/').slice(5).length>0) {
+        while (newUrl.split('/').slice(5).length > 0) {
             newUrl = newUrl.substring(0, newUrl.lastIndexOf('/'));
         }
         return newUrl;
