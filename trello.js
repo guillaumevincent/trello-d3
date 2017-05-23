@@ -46,12 +46,20 @@
         }
     };
 
+    function getShortUrl(url){
+        var newUrl = url;
+        while (newUrl.split('/').slice(5).length>0) {
+            newUrl = newUrl.substring(0, newUrl.lastIndexOf('/'));
+        }
+        return newUrl;
+    }
+
     function extractLinksFromString(string) {
         var matches = [];
         var parentRegex = /^.*Link\s*:\s*(\S+)/mgi;
         var match = parentRegex.exec(string);
         while (match !== null) {
-            matches.push(match[1]);
+            matches.push(getShortUrl(match[1]));
             match = parentRegex.exec(string);
         }
         return matches;

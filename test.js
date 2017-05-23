@@ -29,7 +29,7 @@ test('extractLinkFromCard', t => {
         "checkItemStates": null,
         "closed": false,
         "dateLastActivity": "2017-05-17T14:53:13.824Z",
-        "desc": "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquam amet atque cupiditate debitis dolor eligendi est eum, excepturi itaque libero nihil nulla omnis, praesentium rem sequi similique tempora tenetur, veritatis.\n\n Link: https://trello.com/c/cdDfI9KU/420-epic-card\n",
+        "desc": "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquam amet atque cupiditate debitis dolor eligendi est eum, excepturi itaque libero nihil nulla omnis, praesentium rem sequi similique tempora tenetur, veritatis.\n\n Link: https://trello.com/c/cdDfI9KU/420-epic-card\n\n Link: https://trello.com/c/DfIcd9KU/421-epic-card2\n",
         "descData": {
             "emoji": {}
         },
@@ -65,8 +65,9 @@ test('extractLinkFromCard', t => {
         "subscribed": false,
         "url": "https://trello.com/c/1p0USoBe/552-trello-card"
     };
-    t.is(trello.extractLinksFromCard(card)[0], 'https://trello.com/c/cdDfI9KU/420-epic-card');
-    t.is(trello.extractLinkFromCard(card), 'https://trello.com/c/cdDfI9KU/420-epic-card');
+    t.is(trello.extractLinksFromCard(card)[0], 'https://trello.com/c/cdDfI9KU');
+    t.is(trello.extractLinksFromCard(card)[1], 'https://trello.com/c/DfIcd9KU');
+    t.is(trello.extractLinkFromCard(card), 'https://trello.com/c/cdDfI9KU');
 });
 
 test('buildDependencyTree', t => {
