@@ -1,125 +1,117 @@
 <!doctype html>
-<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Trello D3</title>
-    <style>
-        .node circle {
-            fill: #999;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trello D3</title>
+  <link rel="stylesheet" href="vendors/bootstrap.min.css">
+  <script src="vendors/jquery.min.js"></script>
+  <script src="vendors/vue.min.js"></script>
+  <script src="vendors/d3.min.js"></script>
+  <script src="//api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
+  <style>
+    #svg{
+      height: 95vh;
+    }
 
-        .node text {
-            font: 10px sans-serif;
-        }
+    .link {
+      fill: none;
+      stroke: #555;
+      stroke-opacity: 0.4;
+      stroke-width: 1.5px;
+    }
 
-        .node--internal circle {
-            fill: #555;
-        }
-
-        .node--internal text {
-            text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
-        }
-
-        .link {
-            fill: none;
-            stroke: #555;
-            stroke-opacity: 0.4;
-            stroke-width: 1.5px;
-        }
-
-        [v-cloak] {
-            display: none;
-        }
-    </style>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
-          integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    .node text {
+      font-size: .8em;
+    }
+  </style>
 </head>
 <body>
-
 <div id="app" v-cloak>
-    <div class="container-fluid">
-        <div class="row mt-1" v-if="isAuthenticated && cards.length === 0 && !hideBoards">
-            <div class="col">
-                <label>Click on the board to build its chart:</label>
-                <button type="button" class="btn btn-outline-primary mr-2 pull-right"
-                        v-for="board in boards"
-                        v-on:click="buildGraph(board)">
-                    {{board.name}}
-                </button>
-            </div>
-        </div>
-        <div class="row" v-if="!isAuthenticated">
-            <div class="col mt-1">
-                <button class="btn btn-success" v-on:click="authenticate">login</button>
-            </div>
-        </div>
+  <div class="container-fluid">
+    <div class="row mt-1" v-if="isAuthenticated && !hideBoards">
+      <div class="col">
+        <label>Build graph:</label>
+        <button type="button" class="btn btn-outline-primary mr-2 pull-right"
+                v-for="board in boards"
+                v-on:click="buildGraph(board)">
+          {{board.name}}
+        </button>
+      </div>
     </div>
-    <svg></svg>
+    <div class="row" v-if="!isAuthenticated">
+      <div class="col mt-1">
+        <button class="btn btn-success" v-on:click="authenticate">login</button>
+      </div>
+    </div>
+    <div class="row">
+      <div id="svg" class="col">
+        <svg></svg>
+      </div>
+    </div>
+  </div>
 </div>
-<script src="//unpkg.com/vue"></script>
-<script src="//code.jquery.com/jquery-1.7.1.min.js"></script>
-<script src="//api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
-<script src="//d3js.org/d3.v4.min.js"></script>
 <script src="buildGraph.js"></script>
 <script src="trello.js"></script>
 <script>
-    var app = new Vue({
-        el: '#app',
-        data() {
-            return {
-                isAuthenticated: Trello.authorized(),
-                boards: [],
-                cards: [],
-                hideBoards: false
-            }
-        },
-        methods: {
-            authenticate() {
-                Trello.authorize({
-                    type: 'popup',
-                    name: 'Trello D3',
-                    scope: {
-                        read: 'true',
-                        write: 'true'
-                    },
-                    expiration: 'never',
-                    success: this.authenticationSuccess,
-                    error: this.authenticationFailure
-                });
-            },
-            authenticationFailure() {
-                alert("auth error")
-            },
-            authenticationSuccess() {
-                this.isAuthenticated = true;
-                this.loadBoards()
-            },
-            loadBoards() {
-                Trello.get('/members/me/boards').then(boards => {
-                    this.boards = boards;
-                })
-            },
-            buildGraph(board){
-                this.hideBoards = true;
-                Trello.get(`/boards/${board.id}/lists`)
-                    .then(lists => {
-                        const epicList = tdv.extractEpicList(lists);
-                        return Promise
-                            .all([
-                                Trello.get(`/lists/${epicList.id}/cards`),
-                                Trello.get(`/boards/${board.id}/cards`)
-                            ])
-                            .then(values => {
-                                var links = tdv.buildDependencyTree(board.name, values[0], values[1]);
-                                buildD3Graph(links);
-                            })
-                    });
-            }
-        }
-    });
+  var app = new Vue({
+    el: '#app',
+    beforeMount(){
+      Trello.authorize({
+        interactive:false,
+        success: this.authenticationSuccess
+      })
+    },
+    data() {
+      return {
+        isAuthenticated: false,
+        boards: [],
+        hideBoards: false
+      }
+    },
+    methods: {
+      authenticate() {
+        Trello.authorize({
+          type: 'popup',
+          name: 'Trello D3',
+          scope: {
+            read: 'true'
+          },
+          persist:true,
+          success: this.authenticationSuccess,
+          error: this.authenticationFailure
+        });
+      },
+      authenticationFailure() {
+        alert("auth error")
+      },
+      authenticationSuccess() {
+        this.isAuthenticated = true;
+        this.loadBoards()
+      },
+      loadBoards() {
+        Trello.get('/members/me/boards').then(boards => {
+          this.boards = boards;
+        })
+      },
+      buildGraph(board){
+        this.hideBoards = true;
+        Trello.get(`/boards/${board.id}/lists`)
+          .then(lists => {
+            const epicList = tdv.extractEpicList(lists);
+            return Promise
+              .all([
+                Trello.get(`/lists/${epicList.id}/cards`),
+                Trello.get(`/boards/${board.id}/cards`)
+              ])
+              .then(values => {
+                var links = tdv.buildDependencyTree(board.name, values[0], values[1]);
+                buildD3Graph(links);
+              })
+          });
+      }
+    }
+  });
 </script>
 </body>
 </html>
