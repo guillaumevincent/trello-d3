@@ -23,7 +23,7 @@ test('extractEpicList', t => {
     t.is(trello.extractEpicList(lists).id, lists[1].id)
 });
 
-test('extractLinkFromCard', t => {
+test('extractLinksFromCard', t => {
     const card = {
         "id": "fc798c845f2157e90c1521e1",
         "checkItemStates": null,
@@ -67,7 +67,13 @@ test('extractLinkFromCard', t => {
     };
     t.is(trello.extractLinksFromCard(card)[0], 'https://trello.com/c/cdDfI9KU');
     t.is(trello.extractLinksFromCard(card)[1], 'https://trello.com/c/DfIcd9KU');
-    t.is(trello.extractLinkFromCard(card), 'https://trello.com/c/cdDfI9KU');
+});
+
+test('extractLinkFromCard', t => {
+    const card = {
+        "desc": "Link: https://trello.com/c/H93fU23e/571-authentification\nReview: https://softwarefactory-project.io/r/#/c/5640/\n"
+    };
+    t.is(trello.extractLinkFromCard(card), 'https://trello.com/c/H93fU23e');
 });
 
 test('buildDependencyTree', t => {
