@@ -10,7 +10,7 @@
   <script src="vendors/d3.min.js"></script>
   <script src="//api.trello.com/1/client.js?key=70e22470d6dd04ca5a924eb29e481031"></script>
   <style>
-    #svg{
+    #svg {
       height: 95vh;
     }
 
@@ -58,7 +58,7 @@
     el: '#app',
     beforeMount(){
       Trello.authorize({
-        interactive:false,
+        interactive: false,
         success: this.authenticationSuccess
       })
     },
@@ -77,7 +77,7 @@
           scope: {
             read: 'true'
           },
-          persist:true,
+          persist: true,
           success: this.authenticationSuccess,
           error: this.authenticationFailure
         });
@@ -107,6 +107,10 @@
               .then(values => {
                 var links = tdv.buildDependencyTree(board.name, values[0], values[1]);
                 buildD3Graph(links);
+              })
+              .catch(err => {
+                alert(err.message);
+                console.error(err);
               })
           });
       }
